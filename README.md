@@ -117,6 +117,21 @@ python .\14_cinematic_failure.py  # baseline failure replay
 
 The success viewer uses `models/ppo_lunar_lander_300k.zip`; the failure viewer uses `models/ppo_lunar_lander_baseline.zip`. Train or place those files at those paths first.
 
+### 🎥 Record website demo videos
+
+After training both model checkpoints locally, install requirements and run:
+
+```powershell
+python .\15_record_demo_videos.py
+```
+
+The script evaluates seeds 100–119 without rendering, then records only the selected best-reward continued-PPO run and lowest-reward baseline run. This saves memory compared with buffering every frame from every candidate episode. It writes:
+
+- `docs/assets/success.mp4`
+- `docs/assets/failure.mp4`
+
+Commit these two MP4 files to the repository to show them in the website's **Watch the flights** section. The baseline's lowest-reward run is a failure candidate, not a guarantee of a dramatic crash. GitHub recommends keeping individual files below its 100 MB limit.
+
 ### 🌐 View the website locally
 
 ```powershell
@@ -192,7 +207,7 @@ The online showcase uses presentation animation; it does not execute the PPO mod
 
 ## 🧰 Tech Stack
 
-`Python 3.11` · `Gymnasium` · `Box2D` · `Stable-Baselines3` · `PPO` · `PyTorch` · `NumPy` · `Matplotlib` · `Pygame` · `GitHub Pages`
+`Python 3.11` · `Gymnasium` · `Box2D` · `Stable-Baselines3` · `PPO` · `PyTorch` · `NumPy` · `Matplotlib` · `Pygame` · `ImageIO` · `GitHub Pages`
 
 ---
 
