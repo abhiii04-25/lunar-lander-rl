@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" font-family="'Segoe UI',Helvetica,Arial,sans-serif">
+  <rect width="800" height="400" rx="16" fill="#0f1020"/>
+  <text x="400" y="38" text-anchor="middle" font-size="20" font-weight="700" fill="#e2e8f0">Mean original reward (20 episodes, seeds 100–119)</text>
+  <!-- zero line -->
+  <line x1="60" y1="175.6" x2="760" y2="175.6" stroke="#64748b" stroke-width="1.5"/>
+  <text x="52" y="180" text-anchor="end" font-size="12" fill="#94a3b8">0</text>
+  <!-- bars: scale 0.963 px per point -->
+  <rect x="100" y="175.6" width="110" height="16.9" fill="#f59e0b" rx="4"/>
+  <text x="155" y="212" text-anchor="middle" font-size="16" font-weight="700" fill="#fbbf24">-17.55</text>
+
+  <rect x="260" y="74.6" width="110" height="101" fill="#22c55e" rx="4"/>
+  <text x="315" y="64" text-anchor="middle" font-size="16" font-weight="700" fill="#4ade80">+104.87</text>
+
+  <rect x="420" y="175.6" width="110" height="2" fill="#38bdf8" rx="1"/>
+  <text x="475" y="200" text-anchor="middle" font-size="16" font-weight="700" fill="#7dd3fc">-2.09</text>
+
+  <rect x="580" y="175.6" width="110" height="140.2" fill="#ef4444" rx="4"/>
+  <text x="635" y="338" text-anchor="middle" font-size="16" font-weight="700" fill="#f87171">-145.56</text>
+
+  <g font-size="13" fill="#cbd5e1" text-anchor="middle">
+    <text x="155" y="368">Baseline PPO</text><text x="155" y="385" fill="#64748b">100k steps</text>
+    <text x="315" y="368">Continued PPO</text><text x="315" y="385" fill="#64748b">~300k steps</text>
+    <text x="475" y="368">Time-penalty PPO</text><text x="475" y="385" fill="#64748b">100k steps</text>
+    <text x="635" y="368">Hover-bonus PPO</text><text x="635" y="385" fill="#64748b">100k steps</text>
+  </g>
+</svg>
