@@ -117,20 +117,30 @@ python .\14_cinematic_failure.py  # baseline failure replay
 
 The success viewer uses `models/ppo_lunar_lander_300k.zip`; the failure viewer uses `models/ppo_lunar_lander_baseline.zip`. Train or place those files at those paths first.
 
-### 🎥 Record website demo videos
+### 🎥 Record the cinematic website videos
 
-After training both model checkpoints locally, install requirements and run:
+To publish the **same custom Pygame visuals** shown by scripts 13 and 14—including the background artwork, rocket, HUD, confetti/celebration, and failure sparks—run:
+
+```powershell
+# Record successful landing from file 13
+python .\13_cinematic_lander.py --record
+
+# Record failure sequence from file 14
+python .\14_cinematic_failure.py --record
+```
+
+Or run both one after another using:
 
 ```powershell
 python .\15_record_demo_videos.py
 ```
 
-The script evaluates seeds 100–119 without rendering, then records only the selected best-reward continued-PPO run and lowest-reward baseline run. This saves memory compared with buffering every frame from every candidate episode. It writes:
+The `--record` flag captures the actual Pygame window and automatically stops shortly after the success/failure overlay appears. It writes:
 
-- `docs/assets/success.mp4`
-- `docs/assets/failure.mp4`
+- `docs/assets/success.mp4` — output from `13_cinematic_lander.py`
+- `docs/assets/failure.mp4` — output from `14_cinematic_failure.py`
 
-Commit these two MP4 files to the repository to show them in the website's **Watch the flights** section. The baseline's lowest-reward run is a failure candidate, not a guarantee of a dramatic crash. GitHub recommends keeping individual files below its 100 MB limit.
+The script uses your local model checkpoints and the art in `assets/`, so those files must be present. After recording, commit and push the two MP4 files to GitHub for the website to display them.
 
 ### 🌐 View the website locally
 
