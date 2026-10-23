@@ -5,6 +5,7 @@ Requires the project's saved PPO model and pygame.
 """
 from __future__ import annotations
 
+import argparse
 import math
 import random
 import sys
@@ -12,6 +13,7 @@ import time
 from pathlib import Path
 
 import gymnasium as gym
+import imageio.v2 as imageio
 import pygame
 from stable_baselines3 import PPO
 
@@ -267,7 +269,7 @@ def draw_celebration(screen: pygame.Surface, confetti: Confetti,
               (WIDTH // 2 - 200, HEIGHT - 58), 16, WHITE, True)
 
 
-def main() -> None:
+def main(record_video: bool = False) -> None:
     if not BACKGROUND_PATH.exists() or not ROCKET_PATH.exists():
         raise FileNotFoundError(
             "Visual assets not found. Put the assets folder next to this script. "
@@ -298,13 +300,24 @@ def main() -> None:
     running = True
     done = False
     success = False
+    terminal_reached_at = None
     replay_seed = chosen["seed"]
     start_clock = time.perf_counter()
 
     print("\nStarting cinematic replay...")
     print(f"Model: {model_name} | seed: {replay_seed}")
 
+    writer = None
+    recording_path = ROOT / "docs" / "assets" / "success.mp4"
     try:
+        if record_video:
+            recording_path.parent.mkdir(parents=True, exist_ok=True)
+            writer = imageio.get_writer(
+                str(recording_path), fps=FPS, codec="libx264",
+                quality=8, macro_block_size=1
+            )
+            print(f"Recording cinematic Pygame output to {recording_path}")
+
         while running:
             now = time.perf_counter()
             dt = min(clock.tick(FPS) / 1000.0, 0.05)
@@ -325,6 +338,7 @@ def main() -> None:
                     terminated = truncated = done = success = False
                     celebration_started = False
                     confetti = None
+                    terminal_reached_at = None
                     start_clock = time.perf_counter()
 
             if not running:
@@ -339,6 +353,8 @@ def main() -> None:
                 steps += 1
                 done = bool(terminated or truncated)
                 success = bool(terminated and not truncated and last_reward > 0)
+                if done and terminal_reached_at is None:
+                    terminal_reached_at = time.perf_counter()
 
                 if done:
                     if success:
@@ -381,15 +397,34 @@ def main() -> None:
                           (WIDTH // 2 - 160, HEIGHT - 28), 14, WHITE, True)
 
             pygame.display.flip()
+            if writer is not None:
+                frame = pygame.surfarray.array3d(screen).transpose(1, 0, 2).copy()
+                writer.append_data(frame)
+                # Record the full touchdown celebration and end automatically.
+                if done and success and celebration_started:
+                    if time.perf_counter() - celebration_start >= 7.0:
+                        running = False
+                elif done and not success and terminal_reached_at is not None:
+                    if time.perf_counter() - terminal_reached_at >= 4.0:
+                        running = False
 
-        env.close()
     finally:
+        if writer is not None:
+            writer.close()
+            print(f"Saved cinematic success video: {recording_path}")
+        env.close()
         pygame.quit()
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Cinematic Lunar Lander success viewer")
+    parser.add_argument(
+        "--record", action="store_true",
+        help="Save the actual Pygame viewer output to docs/assets/success.mp4"
+    )
+    args = parser.parse_args()
     try:
-        main()
+        main(record_video=args.record)
     except Exception as exc:
         print(f"Could not launch cinematic viewer: {exc}")
         raise
