@@ -5,6 +5,7 @@ It searches for a real failed attempt from the baseline PPO agent, then replays 
 """
 from __future__ import annotations
 
+import argparse
 import math
 import random
 import sys
@@ -12,6 +13,7 @@ import time
 from pathlib import Path
 
 import gymnasium as gym
+import imageio.v2 as imageio
 import pygame
 from stable_baselines3 import PPO
 
@@ -367,7 +369,7 @@ def draw_failure_overlay(screen: pygame.Surface, title: str, subtitle: str,
     hint = get_font(15, True).render("PRESS SPACE TO REPLAY  |  ESC TO EXIT", True, WHITE)
     screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT - 28)))
 
-def main() -> None:
+def main(record_video: bool = False) -> None:
     if not BACKGROUND_PATH.exists() or not ROCKET_PATH.exists():
         raise FileNotFoundError(
             "Visual assets not found. Put the same assets/ folder used by "
@@ -399,12 +401,23 @@ def main() -> None:
     failure_fx = None
     failure_start_time = 0.0
     running = True
+    terminal_reached_at = None
     start_clock = time.perf_counter()
 
     print("\nStarting cinematic failure replay with matching success-viewer visuals...")
     print(f"Model: {model_name} | seed: {replay_seed} | expected: {chosen['failure_title']}")
 
+    writer = None
+    recording_path = ROOT / "docs" / "assets" / "failure.mp4"
     try:
+        if record_video:
+            recording_path.parent.mkdir(parents=True, exist_ok=True)
+            writer = imageio.get_writer(
+                str(recording_path), fps=FPS, codec="libx264",
+                quality=8, macro_block_size=1
+            )
+            print(f"Recording cinematic Pygame output to {recording_path}")
+
         while running:
             now = time.perf_counter()
             dt = min(clock.tick(FPS) / 1000.0, 0.05)
@@ -425,6 +438,7 @@ def main() -> None:
                     failure_started = False
                     failure_fx = None
                     failure_start_time = 0.0
+                    terminal_reached_at = None
                     start_clock = time.perf_counter()
 
             if not running:
@@ -439,6 +453,8 @@ def main() -> None:
                 steps += 1
                 done = bool(terminated or truncated)
                 success = bool(terminated and not truncated and last_reward > 0)
+                if done and terminal_reached_at is None:
+                    terminal_reached_at = time.perf_counter()
                 if done:
                     if success:
                         print(f"This replay unexpectedly landed safely: reward={total_reward:.2f}")
@@ -491,15 +507,31 @@ def main() -> None:
                           (WIDTH // 2 - 185, HEIGHT - 28), 14, WHITE, True)
 
             pygame.display.flip()
+            if writer is not None:
+                frame = pygame.surfarray.array3d(screen).transpose(1, 0, 2).copy()
+                writer.append_data(frame)
+                # Preserve the failure sparks and danger overlay before stopping.
+                if done and terminal_reached_at is not None:
+                    if time.perf_counter() - terminal_reached_at >= 5.5:
+                        running = False
 
     finally:
+        if writer is not None:
+            writer.close()
+            print(f"Saved cinematic failure video: {recording_path}")
         env.close()
         pygame.quit()
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Cinematic Lunar Lander failure viewer")
+    parser.add_argument(
+        "--record", action="store_true",
+        help="Save the actual Pygame viewer output to docs/assets/failure.mp4"
+    )
+    args = parser.parse_args()
     try:
-        main()
+        main(record_video=args.record)
     except Exception as exc:
         print(f"Could not launch cinematic viewer: {exc}")
         raise
